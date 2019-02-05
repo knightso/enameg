@@ -56,7 +56,7 @@ func (src HogeType) Name() string {
 }
 ```
 
-# With `go generate`
+## With `go generate`
 
 ```go
 //go:generate enameg $GOFILE
