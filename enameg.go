@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/moznion/gowrtr/generator"
@@ -24,7 +25,7 @@ type constant struct {
 
 // Generate returns packageName and generated functions by paths.
 func Generate(paths []string) (string, string) {
-	constMap, err := correctConstants(paths)
+	constMap, err := collectConstants(paths)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,6 +33,7 @@ func Generate(paths []string) (string, string) {
 	var packageName string
 	var constants []constant
 
+	sort.Strings(paths)
 	for _, path := range paths {
 		fset := token.NewFileSet()
 		f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
@@ -48,7 +50,20 @@ func Generate(paths []string) (string, string) {
 
 		cmap := ast.NewCommentMap(fset, f, f.Comments)
 
-		for node, commentGroups := range cmap {
+		// sort by node pos
+		nodes := make([]ast.Node, 0, len(cmap))
+		for n, _ := range cmap {
+			nodes = append(nodes, n)
+		}
+
+		sort.Slice(nodes, func(i, j int) bool {
+			lhs := nodes[i]
+			rhs := nodes[j]
+			return lhs.Pos() < rhs.Pos()
+		})
+
+		for _, node := range nodes {
+			commentGroups := cmap[node]
 			for _, cg := range commentGroups {
 				if hasAnnotation(cg) {
 					gen, ok := node.(*ast.GenDecl)
@@ -90,7 +105,7 @@ func hasAnnotation(cg *ast.CommentGroup) bool {
 	return false
 }
 
-func correctConstants(paths []string) (map[string][]*ast.ValueSpec, error) {
+func collectConstants(paths []string) (map[string][]*ast.ValueSpec, error) {
 	constMap := make(map[string][]*ast.ValueSpec)
 
 	for _, path := range paths {
@@ -100,13 +115,13 @@ func correctConstants(paths []string) (map[string][]*ast.ValueSpec, error) {
 			return nil, err
 		}
 
-		constMap = correctConstantsInFile(constMap, f)
+		constMap = collectConstantsInFile(constMap, f)
 	}
 
 	return constMap, nil
 }
 
-func correctConstantsInFile(constMap map[string][]*ast.ValueSpec, f *ast.File) map[string][]*ast.ValueSpec {
+func collectConstantsInFile(constMap map[string][]*ast.ValueSpec, f *ast.File) map[string][]*ast.ValueSpec {
 	for _, dec := range f.Decls {
 		gen, ok := dec.(*ast.GenDecl)
 		if !ok {
