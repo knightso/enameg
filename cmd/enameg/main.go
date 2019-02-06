@@ -80,7 +80,9 @@ func listFiles(dirname string) []string {
 
 	files := make([]string, 0, len(fs))
 	for _, f := range fs {
-		if !f.IsDir() {
+		isGofile := !f.IsDir() && strings.HasSuffix(f.Name(), ".go") && !strings.HasSuffix(f.Name(), "_test.go")
+
+		if isGofile {
 			files = append(files, filepath.Join(dirname, f.Name()))
 		}
 	}
