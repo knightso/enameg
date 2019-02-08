@@ -14,6 +14,12 @@ import (
 
 const annotation = "enameg"
 
+var specialCharMap = map[string]string{
+	"\\": "\\\\",
+	`"`:  `\"`,
+	"%":  "%%",
+}
+
 type constantVal struct {
 	Name       string
 	CommentVal string
@@ -164,6 +170,9 @@ func newCommentVal(comment string) string {
 		comment = strings.Split(comment, del)[0]
 	}
 
+	for c, rep := range specialCharMap {
+		comment = strings.Replace(comment, c, rep, -1)
+	}
 	return comment
 }
 
@@ -172,6 +181,10 @@ func newConst(typeName string, constMap map[string][]*ast.ValueSpec) constant {
 	vals := make([]constantVal, 0, len(nodes))
 
 	for _, n := range nodes {
+		if n.Comment == nil || len(n.Comment.List) == 0 {
+			continue
+		}
+
 		vals = append(vals, constantVal{
 			Name:       n.Names[0].Name,
 			CommentVal: newCommentVal(n.Comment.List[0].Text),
