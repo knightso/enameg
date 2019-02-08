@@ -70,8 +70,6 @@ func (src SpecialCharType) Name() string {
 		return "A\\B"
 	case SpecialCharTypeDoubleQuote:
 		return "\"B\""
-	case SpecialCharTypePercent:
-		return "C%%D"
 	default:
 		return fmt.Sprintf("%v", src)
 	}

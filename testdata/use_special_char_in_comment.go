@@ -8,5 +8,4 @@ type SpecialCharType int
 const (
 	SpecialCharTypeBackSlash   SpecialCharType = 0 // A\B
 	SpecialCharTypeDoubleQuote SpecialCharType = 1 // "B"
-	SpecialCharTypePercent     SpecialCharType = 2 // C%D
 )
