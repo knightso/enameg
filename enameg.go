@@ -14,6 +14,12 @@ import (
 
 const annotation = "enameg"
 
+var specialCharMap = map[string]string{
+	"\\": "\\\\",
+	`"`:  `\"`,
+	"%":  "%%",
+}
+
 type constantVal struct {
 	Name       string
 	CommentVal string
@@ -164,6 +170,9 @@ func newCommentVal(comment string) string {
 		comment = strings.Split(comment, del)[0]
 	}
 
+	for c, rep := range specialCharMap {
+		comment = strings.Replace(comment, c, rep, -1)
+	}
 	return comment
 }
 
