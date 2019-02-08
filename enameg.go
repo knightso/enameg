@@ -17,7 +17,6 @@ const annotation = "enameg"
 var specialCharMap = map[string]string{
 	"\\": "\\\\",
 	`"`:  `\"`,
-	"%":  "%%",
 }
 
 type constantVal struct {
