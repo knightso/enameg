@@ -14,6 +14,7 @@ import (
 
 var (
 	output = flag.String("output", "", "output file name; default srcdir/<filename>_ename.go")
+	nofmt  = flag.Bool("nofmt", false, "no apply gofmt and goimports when true")
 )
 
 func usage() {
@@ -42,7 +43,12 @@ func main() {
 		files = args
 	}
 
-	packageName, generated := enameg.Generate(files)
+	useFormatter := true
+	if *nofmt {
+		useFormatter = false
+	}
+
+	packageName, generated := enameg.Generate(files, useFormatter)
 	if generated == "" {
 		return
 	}

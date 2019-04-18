@@ -1,6 +1,7 @@
 package enameg_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -20,28 +21,32 @@ func TestSimple(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Fatalf("panic: %#v", r)
+		for _, nofmt := range []bool{true, false} {
+			t.Run(fmt.Sprintf("%s: nofmt=%t", tc.Name, nofmt), func(t *testing.T) {
+				defer func() {
+					if r := recover(); r != nil {
+						t.Fatalf("panic: %#v", r)
+					}
+				}()
+
+				_, g := enameg.Generate([]string{tc.Path}, nofmt)
+
+				expected := strings.TrimSpace(tc.Expected)
+				g = strings.TrimSpace(g)
+				if expected != "" && g != expected {
+					t.Errorf("generated = \n%s, wants = \n%s", g, expected)
 				}
-			}()
-
-			_, g := enameg.Generate([]string{tc.Path})
-
-			expected := strings.TrimSpace(tc.Expected)
-			g = strings.TrimSpace(g)
-			if expected != "" && g != expected {
-				t.Errorf("generated = \n%s, wants = \n%s", g, expected)
-			}
-		})
+			})
+		}
 	}
 }
 
 const expectedForSimple = `
 package testdata
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Name returns the SimpleType Name.
 func (src SimpleType) Name() string {
@@ -61,7 +66,9 @@ func (src SimpleType) Name() string {
 const expectedForSpecialChar = `
 package testdata
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Name returns the SpecialCharType Name.
 func (src SpecialCharType) Name() string {
@@ -79,7 +86,9 @@ func (src SpecialCharType) Name() string {
 const expectedForLackComment = `
 package testdata
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Name returns the LackCommentType Name.
 func (src LackCommentType) Name() string {

@@ -29,7 +29,7 @@ type constant struct {
 }
 
 // Generate returns packageName and generated functions by paths.
-func Generate(paths []string) (string, string) {
+func Generate(paths []string, useFormatter bool) (string, string) {
 	constMap, err := collectConstants(paths)
 	if err != nil {
 		log.Fatal(err)
@@ -92,7 +92,7 @@ func Generate(paths []string) (string, string) {
 		return packageName, ""
 	}
 
-	generated, err := generateNameFunc(packageName, constants)
+	generated, err := generateNameFunc(packageName, constants, useFormatter)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -196,9 +196,11 @@ func newConst(typeName string, constMap map[string][]*ast.ValueSpec) constant {
 	}
 }
 
-func generateNameFunc(packageName string, consts []constant) (string, error) {
+func generateNameFunc(packageName string, consts []constant, useFormatter bool) (string, error) {
 	g := generator.NewRoot(
 		generator.NewPackage(packageName),
+		generator.NewNewline(),
+		generator.NewImport("fmt"),
 		generator.NewNewline(),
 	)
 
@@ -222,7 +224,11 @@ func generateNameFunc(packageName string, consts []constant) (string, error) {
 		)
 	}
 
-	generated, err := g.Gofmt("-s").Goimports().Generate(0)
+	if useFormatter {
+		g = g.Gofmt("-s").Goimports()
+	}
+
+	generated, err := g.Generate(0)
 	if err != nil {
 		return "", err
 	}
