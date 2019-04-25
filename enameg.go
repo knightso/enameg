@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -224,14 +225,21 @@ func generateNameFunc(packageName string, consts []constant, useFormatter bool) 
 		)
 	}
 
-	if useFormatter {
-		g = g.Gofmt("-s").Goimports()
-	}
-
 	generated, err := g.Generate(0)
 	if err != nil {
 		return "", err
 	}
 
+	if useFormatter {
+		return gofmt(generated)
+	}
 	return generated, nil
+}
+
+func gofmt(code string) (string, error) {
+	cmd := exec.Command("gofmt")
+	cmd.Stdin = strings.NewReader(code)
+	b, err := cmd.Output()
+
+	return string(b), err
 }
