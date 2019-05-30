@@ -18,7 +18,14 @@ $ ename [-flag] [directory]
 $ ename [-flag] files... # Must be a single package
 
 -flag:
-  -output="": file name; default srcdir/<filename>_ename.go
+  -output="":
+    file name; default srcdir/<filename>_ename.go
+
+  -nofmt:
+    no apply gofmt and goimports when true
+
+  -default-empty
+        default case to empty when true
 ```
 
 ## Annotation
@@ -52,6 +59,26 @@ func (src HogeType) Name() string {
 		return "C"
 	default:
 		return fmt.Sprintf("%v", src)
+	}
+}
+```
+
+## Options
+
+### default-empty
+
+default case returns `""`.
+
+to:
+
+```go
+// Name returns the HogeType Name.
+func (src HogeType) Name() string {
+	switch src {
+	.
+	.
+	default:
+		return ""
 	}
 }
 ```
