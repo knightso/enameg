@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	output = flag.String("output", "", "output file name; default srcdir/<filename>_ename.go")
-	nofmt  = flag.Bool("nofmt", false, "no apply gofmt and goimports when true")
+	output    = flag.String("output", "", "output file name; default srcdir/<filename>_ename.go")
+	nofmt     = flag.Bool("nofmt", false, "no apply gofmt and goimports when true")
+	emptyName = flag.Bool("empty-name", false, "enable empty name (for constant without comment) when true")
 )
 
 func usage() {
@@ -48,7 +49,12 @@ func main() {
 		useFormatter = false
 	}
 
-	packageName, generated := enameg.Generate(files, useFormatter)
+	enableEmptyName := false
+	if *emptyName {
+		enableEmptyName = true
+	}
+
+	packageName, generated := enameg.Generate(files, useFormatter, enableEmptyName)
 	if generated == "" {
 		return
 	}
