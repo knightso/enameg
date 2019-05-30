@@ -10,11 +10,11 @@ import (
 
 func TestSimple(t *testing.T) {
 	testCases := []struct {
-		Name                  string
-		Path                  string
-		optionNoFmt           bool
-		optionEnableEmptyName bool
-		Expected              string // ignore if empty
+		Name               string
+		Path               string
+		optionNoFmt        bool
+		optionDefaultEmpty bool
+		Expected           string // ignore if empty
 	}{
 		{"simple", "./testdata/simple.go", false, false, expectedForSimple},
 		{"simple", "./testdata/simple.go", true, false, expectedForSimple},
@@ -24,21 +24,21 @@ func TestSimple(t *testing.T) {
 		{"special char", "./testdata/use_special_char_in_comment.go", false, true, expectedForSpecialChar},
 		{"lack comment", "./testdata/lack_comment.go", false, false, expectedForLackComment},
 		{"lack comment", "./testdata/lack_comment.go", true, false, expectedForLackComment},
-		{"lack comment", "./testdata/lack_comment.go", false, true, expectedForLackCommentForEmptyName},
+		{"lack comment", "./testdata/lack_comment.go", false, true, expectedForLackCommentForDefaultEmpty},
 		{"without constants", "./testdata/without_constants.go", false, false, ""},
 		{"without constants", "./testdata/without_constants.go", true, false, ""},
 		{"without constants", "./testdata/without_constants.go", false, true, ""},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("%s,--nofmt=%t,--empty-nocomment=%t", tc.Name, tc.optionNoFmt, tc.optionEnableEmptyName), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s,--nofmt=%t,--empty-nocomment=%t", tc.Name, tc.optionNoFmt, tc.optionDefaultEmpty), func(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					t.Fatalf("panic: %#v", r)
 				}
 			}()
 
-			_, g := enameg.Generate([]string{tc.Path}, tc.optionNoFmt, tc.optionEnableEmptyName)
+			_, g := enameg.Generate([]string{tc.Path}, tc.optionNoFmt, tc.optionDefaultEmpty)
 
 			expected := strings.TrimSpace(tc.Expected)
 			g = strings.TrimSpace(g)
@@ -111,7 +111,7 @@ func (src LackCommentType) Name() string {
 }
 `
 
-const expectedForLackCommentForEmptyName = `
+const expectedForLackCommentForDefaultEmpty = `
 package testdata
 
 import (

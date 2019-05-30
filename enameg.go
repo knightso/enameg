@@ -30,7 +30,7 @@ type constant struct {
 }
 
 // Generate returns packageName and generated functions by paths.
-func Generate(paths []string, useFormatter, enableEmptyName bool) (string, string) {
+func Generate(paths []string, useFormatter, isDefaultEmpty bool) (string, string) {
 	constMap, err := collectConstants(paths)
 	if err != nil {
 		log.Fatal(err)
@@ -82,7 +82,7 @@ func Generate(paths []string, useFormatter, enableEmptyName bool) (string, strin
 						continue
 					}
 
-					c := newConst(spec.Name.Name, constMap, enableEmptyName)
+					c := newConst(spec.Name.Name, constMap, isDefaultEmpty)
 					constants = append(constants, c)
 				}
 			}
@@ -176,14 +176,14 @@ func newCommentVal(comment string) string {
 	return comment
 }
 
-func newConst(typeName string, constMap map[string][]*ast.ValueSpec, enableEmptyName bool) constant {
+func newConst(typeName string, constMap map[string][]*ast.ValueSpec, isDefaultEmpty bool) constant {
 	nodes := constMap[typeName]
 	vals := make([]constantVal, 0, len(nodes))
 
 	for _, n := range nodes {
 		hasComment := n.Comment != nil && len(n.Comment.List) > 0
 
-		if !enableEmptyName && !hasComment {
+		if !isDefaultEmpty && !hasComment {
 			continue
 		}
 
