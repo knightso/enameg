@@ -15,7 +15,7 @@ import (
 var (
 	output       = flag.String("output", "", "output file name; default srcdir/<filename>_ename.go")
 	nofmt        = flag.Bool("nofmt", false, "no apply gofmt and goimports when true")
-	defaultEmpty = flag.Bool("default-empty", false, "default value (for constants without comment) to empty when true")
+	defaultEmpty = flag.Bool("default-empty", false, "default case to empty when true")
 )
 
 func usage() {

@@ -18,10 +18,10 @@ func TestSimple(t *testing.T) {
 	}{
 		{"simple", "./testdata/simple.go", false, false, expectedForSimple},
 		{"simple", "./testdata/simple.go", true, false, expectedForSimple},
-		{"simple", "./testdata/simple.go", false, true, expectedForSimple},
+		{"simple", "./testdata/simple.go", false, true, expectedForSimpleForDefaultEmpty},
 		{"special char", "./testdata/use_special_char_in_comment.go", false, false, expectedForSpecialChar},
 		{"special char", "./testdata/use_special_char_in_comment.go", true, false, expectedForSpecialChar},
-		{"special char", "./testdata/use_special_char_in_comment.go", false, true, expectedForSpecialChar},
+		{"special char", "./testdata/use_special_char_in_comment.go", false, true, expectedForSpecialCharForDefaultEmpty},
 		{"lack comment", "./testdata/lack_comment.go", false, false, expectedForLackComment},
 		{"lack comment", "./testdata/lack_comment.go", true, false, expectedForLackComment},
 		{"lack comment", "./testdata/lack_comment.go", false, true, expectedForLackCommentForDefaultEmpty},
@@ -31,7 +31,7 @@ func TestSimple(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("%s,--nofmt=%t,--empty-nocomment=%t", tc.Name, tc.optionNoFmt, tc.optionDefaultEmpty), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s,--nofmt=%t,--default-empty=%t", tc.Name, tc.optionNoFmt, tc.optionDefaultEmpty), func(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					t.Fatalf("panic: %#v", r)
@@ -71,6 +71,28 @@ func (src SimpleType) Name() string {
 }
 `
 
+const expectedForSimpleForDefaultEmpty = `
+package testdata
+
+import (
+	"fmt"
+)
+
+// Name returns the SimpleType Name.
+func (src SimpleType) Name() string {
+	switch src {
+	case SimpleTypeA:
+		return "A"
+	case SimpleTypeB:
+		return "B"
+	case SimpleTypeC:
+		return "C"
+	default:
+		return ""
+	}
+}
+`
+
 const expectedForSpecialChar = `
 package testdata
 
@@ -87,6 +109,26 @@ func (src SpecialCharType) Name() string {
 		return "\"B\""
 	default:
 		return fmt.Sprintf("%v", src)
+	}
+}
+`
+
+const expectedForSpecialCharForDefaultEmpty = `
+package testdata
+
+import (
+	"fmt"
+)
+
+// Name returns the SpecialCharType Name.
+func (src SpecialCharType) Name() string {
+	switch src {
+	case SpecialCharTypeBackSlash:
+		return "A\\B"
+	case SpecialCharTypeDoubleQuote:
+		return "\"B\""
+	default:
+		return ""
 	}
 }
 `
@@ -123,12 +165,10 @@ func (src LackCommentType) Name() string {
 	switch src {
 	case LackCommentTypeA:
 		return "A"
-	case LackCommentTypeB:
-		return ""
 	case LackCommentTypeC:
 		return "C"
 	default:
-		return fmt.Sprintf("%v", src)
+		return ""
 	}
 }
 `

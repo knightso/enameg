@@ -82,7 +82,7 @@ func Generate(paths []string, useFormatter, isDefaultEmpty bool) (string, string
 						continue
 					}
 
-					c := newConst(spec.Name.Name, constMap, isDefaultEmpty)
+					c := newConst(spec.Name.Name, constMap)
 					constants = append(constants, c)
 				}
 			}
@@ -93,7 +93,7 @@ func Generate(paths []string, useFormatter, isDefaultEmpty bool) (string, string
 		return packageName, ""
 	}
 
-	generated, err := generateNameFunc(packageName, constants, useFormatter)
+	generated, err := generateNameFunc(packageName, constants, useFormatter, isDefaultEmpty)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -176,27 +176,18 @@ func newCommentVal(comment string) string {
 	return comment
 }
 
-func newConst(typeName string, constMap map[string][]*ast.ValueSpec, isDefaultEmpty bool) constant {
+func newConst(typeName string, constMap map[string][]*ast.ValueSpec) constant {
 	nodes := constMap[typeName]
 	vals := make([]constantVal, 0, len(nodes))
 
 	for _, n := range nodes {
-		hasComment := n.Comment != nil && len(n.Comment.List) > 0
-
-		if !isDefaultEmpty && !hasComment {
+		if n.Comment == nil || len(n.Comment.List) == 0 {
 			continue
-		}
-
-		var commentVal string
-		if hasComment {
-			commentVal = newCommentVal(n.Comment.List[0].Text)
-		} else {
-			commentVal = ""
 		}
 
 		vals = append(vals, constantVal{
 			Name:       n.Names[0].Name,
-			CommentVal: commentVal,
+			CommentVal: newCommentVal(n.Comment.List[0].Text),
 		})
 	}
 
@@ -206,13 +197,20 @@ func newConst(typeName string, constMap map[string][]*ast.ValueSpec, isDefaultEm
 	}
 }
 
-func generateNameFunc(packageName string, consts []constant, useFormatter bool) (string, error) {
+func generateNameFunc(packageName string, consts []constant, useFormatter, isDefaultEmpty bool) (string, error) {
 	g := generator.NewRoot(
 		generator.NewPackage(packageName),
 		generator.NewNewline(),
 		generator.NewImport("fmt"),
 		generator.NewNewline(),
 	)
+
+	var defaultCase *generator.DefaultCase
+	if isDefaultEmpty {
+		defaultCase = generator.NewDefaultCase(generator.NewReturnStatement(`""`))
+	} else {
+		defaultCase = generator.NewDefaultCase(generator.NewReturnStatement(`fmt.Sprintf("%v", src)`))
+	}
 
 	for _, c := range consts {
 		caseStatements := make([]*generator.Case, 0, len(c.Vals))
@@ -228,7 +226,7 @@ func generateNameFunc(packageName string, consts []constant, useFormatter bool) 
 			).AddStatements(
 				generator.NewSwitch("src").
 					AddCase(caseStatements...).
-					Default(generator.NewDefaultCase(generator.NewReturnStatement(`fmt.Sprintf("%v", src)`))),
+					Default(defaultCase),
 			),
 			generator.NewNewline(),
 		)
