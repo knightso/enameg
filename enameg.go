@@ -30,7 +30,7 @@ type constant struct {
 }
 
 // Generate returns packageName and generated functions by paths.
-func Generate(paths []string, useFormatter bool) (string, string) {
+func Generate(paths []string, useFormatter, isDefaultEmpty bool) (string, string) {
 	constMap, err := collectConstants(paths)
 	if err != nil {
 		log.Fatal(err)
@@ -93,7 +93,7 @@ func Generate(paths []string, useFormatter bool) (string, string) {
 		return packageName, ""
 	}
 
-	generated, err := generateNameFunc(packageName, constants, useFormatter)
+	generated, err := generateNameFunc(packageName, constants, useFormatter, isDefaultEmpty)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -197,13 +197,20 @@ func newConst(typeName string, constMap map[string][]*ast.ValueSpec) constant {
 	}
 }
 
-func generateNameFunc(packageName string, consts []constant, useFormatter bool) (string, error) {
+func generateNameFunc(packageName string, consts []constant, useFormatter, isDefaultEmpty bool) (string, error) {
 	g := generator.NewRoot(
 		generator.NewPackage(packageName),
 		generator.NewNewline(),
 		generator.NewImport("fmt"),
 		generator.NewNewline(),
 	)
+
+	var defaultCase *generator.DefaultCase
+	if isDefaultEmpty {
+		defaultCase = generator.NewDefaultCase(generator.NewReturnStatement(`""`))
+	} else {
+		defaultCase = generator.NewDefaultCase(generator.NewReturnStatement(`fmt.Sprintf("%v", src)`))
+	}
 
 	for _, c := range consts {
 		caseStatements := make([]*generator.Case, 0, len(c.Vals))
@@ -219,7 +226,7 @@ func generateNameFunc(packageName string, consts []constant, useFormatter bool) 
 			).AddStatements(
 				generator.NewSwitch("src").
 					AddCase(caseStatements...).
-					Default(generator.NewDefaultCase(generator.NewReturnStatement(`fmt.Sprintf("%v", src)`))),
+					Default(defaultCase),
 			),
 			generator.NewNewline(),
 		)
